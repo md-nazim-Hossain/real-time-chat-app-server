@@ -1,0 +1,10 @@
+import express from "express";
+import { authController } from "../controllers/auth";
+const router = express.Router();
+router.post("/login", authController.login);
+router.post("/register", authController.register, authController.sentOtp);
+router.post("/sent-otp", authController.sentOtp);
+router.post("/verify-otp", authController.verifyOtp);
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
+export const authRoutes = router;
