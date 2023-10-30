@@ -28,6 +28,7 @@
     "mongoose": "^7.6.2",
     "morgan": "^1.10.0",
     "otp-generator": "^4.0.1",
+    "socket.io": "^4.7.2",
     "xss": "^1.0.14"
   },
   "devDependencies": {

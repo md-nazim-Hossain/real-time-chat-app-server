@@ -1,4 +1,5 @@
 import { Model, Types } from "mongoose";
+import { IFriendRequest } from "./friendRequest.interface";
 
 export type IUser = {
   _id: Types.ObjectId;
@@ -15,6 +16,8 @@ export type IUser = {
   verified: boolean;
   otp: string | undefined;
   otpExpiredAt: Date | undefined;
+  socketId?: string;
+  friends: Array<Types.ObjectId | IFriendRequest>;
 };
 
 export type IUserMethods = {

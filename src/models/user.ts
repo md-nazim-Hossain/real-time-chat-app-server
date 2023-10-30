@@ -32,6 +32,13 @@ const userSchema = new Schema<IUser, Record<string, unknown>, IUserMethods>(
     verified: { type: Boolean, default: false },
     otp: { type: String },
     otpExpiredAt: { type: Date },
+    socketId: { type: String },
+    friends: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,
