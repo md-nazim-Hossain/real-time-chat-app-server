@@ -1,6 +1,6 @@
 import { Model, Types } from "mongoose";
 import { IFriendRequest } from "./friendRequest.interface";
-
+export type IStatus = "Online" | "Offline";
 export type IUser = {
   _id: Types.ObjectId;
   firstName: string;
@@ -18,6 +18,7 @@ export type IUser = {
   otpExpiredAt: Date | undefined;
   socketId?: string;
   friends: Array<Types.ObjectId | IFriendRequest>;
+  status: IStatus;
 };
 
 export type IUserMethods = {

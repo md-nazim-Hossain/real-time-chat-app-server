@@ -33,12 +33,13 @@ const login = catchAsync(async (req: Request, res: Response) => {
     config.jwt.secret_expire_in!
   );
 
-  sendResponse<{ token: string }>(res, {
+  sendResponse<{ token: string; id: string }>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Login successful",
     data: {
       token,
+      id: user._id.toString(),
     },
   });
 });
@@ -157,12 +158,13 @@ const verifyOtp = catchAsync(async (req: Request, res: Response) => {
     config.jwt.secret!,
     config.jwt.secret_expire_in!
   );
-  sendResponse<{ token: string }>(res, {
+  sendResponse<{ token: string; id: string }>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "OTP verified successfully",
     data: {
       token,
+      id: user._id.toString(),
     },
   });
 });
@@ -272,6 +274,7 @@ const protect = catchAsync(
 
     // verify token
     const decoded = jwtTokenHelpers.verifyToken(token, config.jwt.secret!);
+
     const userExist = await User.findById(decoded._id);
     if (!userExist) {
       throw new ApiError(

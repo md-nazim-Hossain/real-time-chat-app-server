@@ -39,6 +39,10 @@ const userSchema = new Schema<IUser, Record<string, unknown>, IUserMethods>(
         ref: "User",
       },
     ],
+    status: {
+      type: String,
+      enum: ["Online", "Offline"],
+    },
   },
   {
     timestamps: true,
