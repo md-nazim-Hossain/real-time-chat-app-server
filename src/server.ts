@@ -13,6 +13,7 @@ import {
 } from "./interfaces/socketIo.interface";
 import { FriendRequest } from "./models/friendRequest";
 import { User } from "./models/user";
+import { OneToOneMessage } from "./models/oneToOneMessage";
 process.on("uncaughtException", (err) => {
   console.log(err);
   process.exit(1);
@@ -93,6 +94,19 @@ async function main() {
       io.to(receiver?.socketId as string).emit("friendRequestAccepted", {
         message: "Friend Request Accepted",
       });
+    });
+
+    socket.on("getDirectConversation", async ({ userId }, callback) => {
+      const existingMessage = await OneToOneMessage.find({
+        participants: {
+          $all: [userId],
+        },
+      }).populate(
+        "participants",
+        "firstName lastName avatar status socketId _id email"
+      );
+      console.log(existingMessage);
+      callback(existingMessage);
     });
 
     socket.on("textMessage", (data) => {
