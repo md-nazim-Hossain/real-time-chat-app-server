@@ -11,4 +11,5 @@ router.get(
   authController.protect,
   userController.getFriendRequests
 );
+router.get("/profile", authController.protect, userController.profile);
 export const userRoutes = router;

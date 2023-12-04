@@ -7,6 +7,7 @@ import { User } from "../models/user";
 import catchAsync from "../shared/catchAsync";
 import filterObj from "../shared/filterObj";
 import sendResponse from "../shared/sendResponse";
+import ApiError from "../shared/ApiError";
 
 const updateMe = catchAsync(async (req: Request, res: Response) => {
   const { user } = req;
@@ -62,14 +63,34 @@ const getFriendRequests = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getFiends = catchAsync(async (req: Request, res: Response) => {
-  const friends = await User.findById(req.user._id)
-    .populate("friends", "_id firstName lastName avatar")
+  const friendsUser = await User.findById(req.user._id)
+    .populate("friends", "_id firstName lastName avatar status")
     .lean();
-  return sendResponse<IUser>(res, {
+  const friends = friendsUser?.friends;
+  return sendResponse<any[]>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Friends Found Successfully",
     data: friends,
+  });
+});
+
+const profile = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.query;
+  if (!userId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Please provide userId");
+  }
+  const getUser = await User.findById(userId).select(
+    "firstName avatar status about lastName _id"
+  );
+  if (!getUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User Found Successfully",
+    data: getUser,
   });
 });
 
@@ -78,4 +99,5 @@ export const userController = {
   getUsers,
   getFiends,
   getFriendRequests,
+  profile,
 };

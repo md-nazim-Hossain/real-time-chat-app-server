@@ -4,6 +4,7 @@ import path from "path";
 import { Server } from "socket.io";
 import app from "./app";
 import config from "./config/index";
+import { ObjectId } from "mongodb";
 import { IFriendRequest } from "./interfaces/friendRequest.interface";
 import {
   IClientToServerEvents,
@@ -105,15 +106,65 @@ async function main() {
         "participants",
         "firstName lastName avatar status socketId _id email"
       );
-      console.log(existingMessage);
       callback(existingMessage);
     });
 
-    socket.on("textMessage", (data) => {
-      //create new message
-      //save to db
-      //emit incoming message
-      // emit outgoing message
+    socket.on("startConversation", async (data) => {
+      const { to, from }: { to: string; from: string } = data;
+
+      const existingConversation = await OneToOneMessage.find({
+        participants: { $all: [to, from] },
+      }).populate(
+        "participants",
+        "firstName lastName avatar status socketId _id email"
+      );
+
+      if (!existingConversation.length) {
+        let newChat: any = await OneToOneMessage.create({
+          participants: [to, from],
+        });
+
+        newChat = await OneToOneMessage.findById(newChat?._id).populate(
+          "participants",
+          "firstName lastName avatar status socketId _id email"
+        );
+        socket.emit("startChat", newChat);
+      } else {
+        socket.emit("startChat", existingConversation[0]);
+      }
+    });
+
+    socket.on("getMessages", async (data, callback) => {
+      const { messages }: any = await OneToOneMessage.findById(
+        data.conversationId
+      ).select("messages");
+      callback(messages);
+    });
+
+    socket.on("textMessage", async (data) => {
+      const { conversationId, message, to, from, type } = data;
+      const toUser = await User.findById(to);
+      const fromUser = await User.findById(from);
+      const newMessage = {
+        to,
+        from,
+        type,
+        text: message,
+        created_at: Date.now(),
+      };
+
+      const chat = await OneToOneMessage.findById(conversationId);
+      chat?.messages.push(newMessage);
+      await chat?.save({});
+
+      io.to(toUser?.socketId as string).emit("newMessage", {
+        conversationId,
+        message: newMessage,
+      });
+      io.to(fromUser?.socketId as string).emit("newMessage", {
+        conversationId,
+        message: newMessage,
+      });
     });
 
     socket.on("fileMessage", (data) => {

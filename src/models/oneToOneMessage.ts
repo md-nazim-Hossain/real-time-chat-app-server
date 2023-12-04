@@ -2,10 +2,16 @@ import { Schema, model } from "mongoose";
 
 const oneToOneMessageSchema = new Schema(
   {
-    participants: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    participants: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     messages: [
       {
         to: {
