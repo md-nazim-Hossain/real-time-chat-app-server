@@ -22,7 +22,7 @@ const updateMe = catchAsync(async (req: Request, res: Response) => {
     new: true,
     runValidators: true,
   });
-  sendResponse<IUser>(res, {
+  return sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User profile updated successfully",
@@ -86,7 +86,7 @@ const profile = catchAsync(async (req: Request, res: Response) => {
   if (!getUser) {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
-  sendResponse<IUser>(res, {
+  return sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User Found Successfully",

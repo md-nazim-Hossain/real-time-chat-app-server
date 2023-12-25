@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
-import httpStatus, { OK } from "http-status";
+import httpStatus from "http-status";
 import optGenerator from "otp-generator";
 import config from "../config";
 import { jwtTokenHelpers } from "../helpers/jwtHelpers";
@@ -45,9 +45,6 @@ const login = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized User");
-  }
   const user = await User.findById(req.user?._id);
   if (!user) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized User");
@@ -133,7 +130,7 @@ const sentOtp = catchAsync(async (req: Request, res: Response) => {
     text: `Your OTP is ${newOtp}. Its expires in 10 minutes`,
   });
 
-  sendResponse(res, {
+  return sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "OTP sent successfully ? Check your email",
@@ -179,14 +176,15 @@ const verifyOtp = catchAsync(async (req: Request, res: Response) => {
     config.jwt.secret!,
     config.jwt.secret_expire_in!
   );
-  sendResponse<{ token: string; id: string }>(res, {
-    statusCode: httpStatus.OK,
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res.status(httpStatus.OK).cookie("accessToken", token, options).json({
     success: true,
-    message: "OTP verified successfully",
-    data: {
-      token,
-      id: user._id.toString(),
-    },
+    message: "Login successful",
+    data: user._id.toString(),
   });
 });
 
@@ -266,14 +264,19 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
     config.jwt.secret!,
     config.jwt.secret_expire_in!
   );
-  sendResponse<{ token: string }>(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Password reset successfully",
-    data: {
-      token: jwtToken,
-    },
-  });
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(httpStatus.OK)
+    .cookie("accessToken", jwtToken, options)
+    .json({
+      success: true,
+      message: "Password Reset Successfully",
+      data: null,
+    });
 });
 
 export const authController = {
