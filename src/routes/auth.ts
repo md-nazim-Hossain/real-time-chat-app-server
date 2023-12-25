@@ -1,7 +1,9 @@
 import express from "express";
 import { authController } from "../controllers/auth";
+import { verifyToken } from "../middleware/verifyToken";
 const router = express.Router();
 router.post("/login", authController.login);
+router.post("/logout", verifyToken, authController.logout);
 router.post("/register", authController.register, authController.sentOtp);
 router.post("/sent-otp", authController.sentOtp);
 router.post("/verify-otp", authController.verifyOtp);

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
-import httpStatus from "http-status";
+import httpStatus, { OK } from "http-status";
 import optGenerator from "otp-generator";
 import config from "../config";
 import { jwtTokenHelpers } from "../helpers/jwtHelpers";
@@ -32,15 +32,36 @@ const login = catchAsync(async (req: Request, res: Response) => {
     config.jwt.secret!,
     config.jwt.secret_expire_in!
   );
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
 
-  sendResponse<{ token: string; id: string }>(res, {
-    statusCode: httpStatus.OK,
+  return res.status(httpStatus.OK).cookie("accessToken", token, options).json({
     success: true,
     message: "Login successful",
-    data: {
-      token,
-      id: user._id.toString(),
-    },
+    data: user._id.toString(),
+  });
+});
+
+const logout = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized User");
+  }
+  const user = await User.findById(req.user?._id);
+  if (!user) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized User");
+  }
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res.status(httpStatus.OK).clearCookie("accessToken", options).json({
+    success: true,
+    message: "Logout successfully",
+    data: null,
   });
 });
 
@@ -255,50 +276,12 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const protect = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    } else if (req.cookies.jwt) {
-      token = req.cookies.jwt;
-    } else {
-      throw new ApiError(
-        httpStatus.UNAUTHORIZED,
-        "You are not logged in, please login to get access"
-      );
-    }
-
-    // verify token
-    const decoded = jwtTokenHelpers.verifyToken(token, config.jwt.secret!);
-
-    const userExist = await User.findById(decoded._id);
-    if (!userExist) {
-      throw new ApiError(
-        httpStatus.NOT_FOUND,
-        "Error in decoding token, please login again"
-      );
-    }
-    if (userExist.changedPasswordAfter(decoded.iat!)) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "User recently changed password! Please login again"
-      );
-    }
-    req.user = userExist;
-    next();
-  }
-);
-
 export const authController = {
   login,
+  logout,
   register,
   sentOtp,
   verifyOtp,
   forgotPassword,
   resetPassword,
-  protect,
 };

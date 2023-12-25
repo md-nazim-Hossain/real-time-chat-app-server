@@ -135,10 +135,10 @@ async function main() {
     });
 
     socket.on("getMessages", async (data, callback) => {
-      const { messages }: any = await OneToOneMessage.findById(
+      const getData = await OneToOneMessage.findById(
         data.conversationId
       ).select("messages");
-      callback(messages);
+      callback(getData?.messages);
     });
 
     socket.on("textMessage", async (data) => {
@@ -156,7 +156,6 @@ async function main() {
       const chat = await OneToOneMessage.findById(conversationId);
       chat?.messages.push(newMessage);
       await chat?.save({});
-
       io.to(toUser?.socketId as string).emit("newMessage", {
         conversationId,
         message: newMessage,
